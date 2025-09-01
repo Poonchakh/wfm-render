@@ -191,22 +191,30 @@ async function fetchPrices(item) {
   return { item, data };
 }
 
-// ===== Обновление кэша =====
+const BATCH_SIZE = 50; // можно увеличить или уменьшить в зависимости от памяти
+
 async function updateCache() {
   console.log("🔄 Обновляю кэш цен...");
   const newCache = {};
-  for (const item of ITEMS) {
-    try {
-      const { item: itemName, data } = await fetchPrices(item);
-      newCache[itemName] = data;
-    } catch (err) {
-      console.error(`Ошибка для ${item}:`, err.message);
-    }
+  
+  for (let i = 0; i < ITEMS.length; i += BATCH_SIZE) {
+    const batch = ITEMS.slice(i, i + BATCH_SIZE);
+    await Promise.all(batch.map(async (item) => {
+      try {
+        const { item: itemName, data } = await fetchPrices(item);
+        newCache[itemName] = data;
+      } catch (err) {
+        console.error(`Ошибка для ${item}:`, err.message);
+      }
+    }));
+    console.log(`✅ Обработан батч ${i}–${i + batch.length}`);
   }
+  
   cachedPrices = newCache;
   lastUpdated = new Date().toISOString();
   console.log("✅ Кэш обновлён в", lastUpdated);
 }
+
 
 // ===== Автообновление каждые 5 минут =====
 setInterval(updateCache, 5 * 60 * 1000);
