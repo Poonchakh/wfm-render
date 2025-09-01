@@ -1,4 +1,5 @@
 import express from "express";
+import fetch from "node-fetch";
 
 const app = express();
 const PORT = process.env.PORT || 10000;
@@ -169,51 +170,54 @@ const ITEMS = [
   "primed_deadly_efficiency","primed_deadly_efficiency","primed_rubedo_lined_barrel","primed_rubedo_lined_barrel"
 ];
 
-// 🔄 Функция для получения цен одного предмета
-async function fetchItemPrice(item) {
-  try {
-    const res = await fetch(`https://api.warframe.market/v1/items/${item}/orders`);
-    if (!res.ok) throw new Error(`Ошибка ${res.status}`);
-    const data = await res.json();
-    return { item, data };
-  } catch (err) {
-    console.error(`Ошибка при загрузке ${item}:`, err.message);
-    return { item, error: err.message };
+// ===== Кэш для хранения цен =====
+let cachedPrices = {};
+let lastUpdated = null;
+
+// ===== Функция для получения цен =====
+async function fetchPrices(item) {
+  const url = `https://api.warframe.market/v1/items/${item}/orders`;
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error(`Ошибка при запросе ${item}: ${res.status}`);
   }
+  const data = await res.json();
+  return { item, data };
 }
 
-// 🧩 Разбиваем массив на чанки
-function chunkArray(arr, size) {
-  const chunks = [];
-  for (let i = 0; i < arr.length; i += size) {
-    chunks.push(arr.slice(i, i + size));
-  }
-  return chunks;
-}
-
-// 📦 Получение цен для всех предметов партиями
-async function fetchAllPrices() {
-  const results = {};
-  const chunks = chunkArray(ITEMS, 20); // по 20 предметов за раз
-
-  for (const chunk of chunks) {
-    const chunkResults = await Promise.all(chunk.map(fetchItemPrice));
-    for (const r of chunkResults) {
-      results[r.item] = r.data || { error: r.error };
+// ===== Обновление кэша =====
+async function updateCache() {
+  console.log("🔄 Обновляю кэш цен...");
+  const newCache = {};
+  for (const item of ITEMS) {
+    try {
+      const { item: itemName, data } = await fetchPrices(item);
+      newCache[itemName] = data;
+    } catch (err) {
+      console.error(`Ошибка для ${item}:`, err.message);
     }
   }
-
-  return results;
+  cachedPrices = newCache;
+  lastUpdated = new Date().toISOString();
+  console.log("✅ Кэш обновлён в", lastUpdated);
 }
 
-// 🌐 Эндпоинт /prices
-app.get("/prices", async (req, res) => {
-  try {
-    const data = await fetchAllPrices();
-    res.json(data);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+// ===== Автообновление каждые 5 минут =====
+setInterval(updateCache, 5 * 60 * 1000);
+
+// ===== Эндпоинт /prices =====
+app.get("/prices", (req, res) => {
+  if (!lastUpdated) {
+    return res.status(503).json({ error: "Данные ещё не загружены, подожди пару минут" });
   }
+  res.json({
+    updated: lastUpdated,
+    prices: cachedPrices
+  });
 });
 
-app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
+// ===== Запуск сервера =====
+app.listen(PORT, () => {
+  console.log(`✅ Server running on port ${PORT}`);
+  updateCache(); // загружаем данные сразу при старте
+});
