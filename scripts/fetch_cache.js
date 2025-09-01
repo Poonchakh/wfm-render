@@ -39,4 +39,16 @@ async function main() {
   }
 }
 
-main();
+// В конце файла fetch_cache.js
+export async function fetchCache() {
+  for (let i = 0; i < items.length; i += batchSize) {
+    const batch = items.slice(i, i + batchSize);
+    for (const item of batch) {
+      await fetchItem(item);
+      await sleep(200); // задержка между запросами
+    }
+    console.log(`✅ Обработан батч ${i}-${i + batch.length}`);
+    await sleep(1000); // задержка между батчами
+  }
+}
+
