@@ -1,8 +1,9 @@
 import express from "express";
-import fetch from "node-fetch";
 
 const app = express();
 const PORT = process.env.PORT || 10000;
+
+// ===== Твой список предметов (сюда вставляешь весь огромный массив) =====
 
 const ITEMS = [
   // ===== Frames =====
@@ -168,22 +169,51 @@ const ITEMS = [
   "primed_deadly_efficiency","primed_deadly_efficiency","primed_rubedo_lined_barrel","primed_rubedo_lined_barrel"
 ];
 
-// ====== Функция для получения цен ======
-async function fetchPrices(itemList) {
-  const url = `https://api.warframe.market/v1/items/${itemList.join(",")}/orders`;
-  const res = await fetch(url);
-  const data = await res.json();
-  return data;
+// 🔄 Функция для получения цен одного предмета
+async function fetchItemPrice(item) {
+  try {
+    const res = await fetch(`https://api.warframe.market/v1/items/${item}/orders`);
+    if (!res.ok) throw new Error(`Ошибка ${res.status}`);
+    const data = await res.json();
+    return { item, data };
+  } catch (err) {
+    console.error(`Ошибка при загрузке ${item}:`, err.message);
+    return { item, error: err.message };
+  }
 }
 
-// ====== Эндпоинт /prices ======
+// 🧩 Разбиваем массив на чанки
+function chunkArray(arr, size) {
+  const chunks = [];
+  for (let i = 0; i < arr.length; i += size) {
+    chunks.push(arr.slice(i, i + size));
+  }
+  return chunks;
+}
+
+// 📦 Получение цен для всех предметов партиями
+async function fetchAllPrices() {
+  const results = {};
+  const chunks = chunkArray(ITEMS, 20); // по 20 предметов за раз
+
+  for (const chunk of chunks) {
+    const chunkResults = await Promise.all(chunk.map(fetchItemPrice));
+    for (const r of chunkResults) {
+      results[r.item] = r.data || { error: r.error };
+    }
+  }
+
+  return results;
+}
+
+// 🌐 Эндпоинт /prices
 app.get("/prices", async (req, res) => {
   try {
-    const data = await fetchPrices(ITEMS);
+    const data = await fetchAllPrices();
     res.json(data);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
