@@ -8,7 +8,7 @@ import express from "express";
 import fetch from "node-fetch";
 
 // Импорт функции из скрипта
-import { fetchCache } from "../scripts/fetch_cache.js";
+import { updateCache as fetchCache } from "../scripts/fetch_cache.js";
 
 const app = express();
 const PORT = process.env.PORT || 10000;
