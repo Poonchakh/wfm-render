@@ -8,7 +8,7 @@ import express from "express";
 import fetch from "node-fetch";
 
 // Импорт функции из скрипта
-import fetchCache from "wfm-render/scripts/fetch_cache.js";  // путь подстрой под свою структуру
+import fetchCache from "../scripts/fetch_cache.js";
 
 const app = express();
 const PORT = process.env.PORT || 10000;
