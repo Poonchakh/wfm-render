@@ -183,43 +183,22 @@ const ITEMS = [
 let cachedPrices = {};
 let lastUpdated = null;
 
-// ===== Функция для получения цен =====
-async function fetchPrices(item) {
-  const url = `https://api.warframe.market/v1/items/${item}/orders`;
-  const res = await fetch(url);
-  if (!res.ok) {
-    throw new Error(`Ошибка при запросе ${item}: ${res.status}`);
-  }
-  const data = await res.json();
-  return { item, data };
-}
-
-const BATCH_SIZE = 50; // можно увеличить или уменьшить в зависимости от памяти
-
+// ===== Обновление кэша через твой скрипт =====
 async function updateCache() {
   console.log("🔄 Обновляю кэш цен...");
-  const newCache = {};
-  
-  for (let i = 0; i < ITEMS.length; i += BATCH_SIZE) {
-    const batch = ITEMS.slice(i, i + BATCH_SIZE);
-    await Promise.all(batch.map(async (item) => {
-      try {
-        const { item: itemName, data } = await fetchPrices(item);
-        newCache[itemName] = data;
-      } catch (err) {
-        console.error(`Ошибка для ${item}:`, err.message);
-      }
-    }));
-    console.log(`✅ Обработан батч ${i}–${i + batch.length}`);
+  try {
+    // вызываем функцию из fetch_cache.js
+    cachedPrices = await fetchCache(ITEMS);  // fetchCache уже делает задержки между запросами
+    lastUpdated = new Date().toISOString();
+    console.log("✅ Кэш обновлён в", lastUpdated);
+  } catch (err) {
+    console.error("Ошибка при обновлении кеша:", err.message);
   }
-  
-  cachedPrices = newCache;
-  lastUpdated = new Date().toISOString();
-  console.log("✅ Кэш обновлён в", lastUpdated);
 }
 
 
-// ===== Автообновление каждые 5 минут =====
+
+// ===== Автообновление каждые 15 минут =====
 setInterval(updateCache, 15 * 60 * 1000);
 
 // ===== Эндпоинт /prices =====
