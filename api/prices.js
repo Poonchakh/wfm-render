@@ -181,7 +181,6 @@ const ITEMS = [
 
 
 // ====== Удаляем дубликаты ======
-const ITEMS = [ /* ... твой массив ... */ ];
 const UNIQUE_ITEMS = Array.from(new Set(ITEMS));
 
 let cachedPrices = {};
