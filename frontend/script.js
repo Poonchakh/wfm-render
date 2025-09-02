@@ -36,7 +36,7 @@ async function fetchPrices() {
 refreshButton.addEventListener("click", fetchPrices);
 
 // Автообновление каждые 5 минут
-setInterval(fetchPrices, 5 * 60 * 1000);
+setInterval(fetchPrices, 40 * 60 * 1000);
 
 // Загружаем данные сразу
 fetchPrices();
