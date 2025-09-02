@@ -13,25 +13,37 @@ async function fetchItem(item) {
     const res = await fetch(`https://api.warframe.market/v1/items/${item}/orders`);
     if (res.status === 200) {
       const data = await res.json();
+      // Фильтруем только sell и ingame
+      const sellOrders = data.payload.orders
+        .filter(order => order.order_type === "sell" && order.user.status === "ingame")
+        .sort((a, b) => a.platinum - b.platinum) // сортируем по цене
+        .slice(0, 6); // только первые 6
+      
+      // Сохраняем только нужные поля
+      const minimalData = sellOrders.map(order => ({
+        price: order.platinum,
+        seller: order.user.ingame_name,
+        quantity: order.quantity
+      }));
+
       console.log(`✅ ${item} загружен`);
-      return data;
+      return minimalData;
     } else if (res.status === 429) {
       console.log(`⚠️ 429 для ${item}, повтор через паузу`);
       await sleep(1000);
       return fetchItem(item);
     } else {
       console.log(`Ошибка для ${item}: ${res.status}`);
-      return null;
+      return [];
     }
   } catch (e) {
     console.log(`Ошибка для ${item}: ${e}`);
-    return null;
+    return [];
   }
 }
 
 // items приходит из основного файла, уже без дублей
 export async function updateCache(items) {
-  // Дедупликация на всякий случай
   const uniqueItems = Array.from(new Set(items));
   console.log("🔄 Обновляю кэш цен для", uniqueItems.length, "уникальных предметов.");
 
@@ -39,13 +51,13 @@ export async function updateCache(items) {
   for (let i = 0; i < uniqueItems.length; i += BATCH_SIZE) {
     const batch = uniqueItems.slice(i, i + BATCH_SIZE);
     for (const item of batch) {
-      const data = await fetchItem(item);
-      if (data) newCache[item] = data;
+      const minimalData = await fetchItem(item);
+      newCache[item] = minimalData; // всегда массив (даже если ошибка)
       await sleep(SLEEP_BETWEEN_REQUESTS);
     }
     console.log(`✅ Обработан батч ${i}–${i + batch.length}`);
     await sleep(SLEEP_BETWEEN_BATCHES);
   }
 
-  return newCache; // возвращаем кэш
+  return newCache; // возвращаем компактный кэш
 }
