@@ -158,24 +158,7 @@ const ITEMS = [
   "venka_prime_set","venka_prime_blades","venka_prime_blades","venka_prime_blueprint","venka_prime_gauntlet","venka_prime_gauntlet",
   "volnus_prime_set","volnus_prime_blueprint","volnus_prime_handle","volnus_prime_head",
 
-  // ===== Mods =====
-  "primed_continuity","primed_continuity","primed_redirection","primed_redirection","primed_flow","primed_flow","primed_fast_hands","primed_fast_hands",
-  "primed_magazine_warp","primed_magazine_warp","primed_cryo_rounds","primed_cryo_rounds","primed_rifle_ammo_mutation","primed_rifle_ammo_mutation",
-  "primed_firestorm","primed_firestorm","primed_bane_of_grineer","primed_bane_of_grineer","primed_bane_of_infested","primed_bane_of_infested",
-  "primed_bane_of_corpus","primed_bane_of_corpus","primed_bane_of_corrupted","primed_bane_of_corrupted","primed_stabilizer","primed_stabilizer",
-  "primed_sniper_ammo_mutation","primed_sniper_ammo_mutation","primed_point_blank","primed_point_blank","primed_charged_shell","primed_charged_shell",
-  "primed_cleanse_grineer","primed_cleanse_grineer","primed_cleanse_infested","primed_cleanse_infested","primed_cleanse_corpus","primed_cleanse_corpus",
-  "primed_cleanse_corrupted","primed_cleanse_corrupted","primed_chilling_grasp","primed_chilling_grasp","primed_shotgun_ammo_mutation","primed_shotgun_ammo_mutation",
-  "primed_ravage","primed_ravage","primed_ammo_stock","primed_ammo_stock","primed_counterbalance","primed_counterbalance","primed_quickdraw","primed_quickdraw",
-  "primed_heated_charge","primed_heated_charge","primed_target_cracker","primed_target_cracker","primed_expel_grineer","primed_expel_grineer",
-  "primed_expel_infested","primed_expel_infested","primed_expel_corpus","primed_expel_corpus","primed_expel_corrupted","primed_expel_corrupted",
-  "primed_fulmination","primed_fulmination","primed_convulsion","primed_convulsion","primed_pistol_ammo_mutation","primed_pistol_ammo_mutation",
-  "primed_pistol_gambit","primed_pistol_gambit","primed_slip_magazine","primed_slip_magazine","primed_steady_hands","primed_steady_hands",
-  "primed_pressure_point","primed_pressure_point","primed_smite_grineer","primed_smite_grineer","primed_smite_infested","primed_smite_infested",
-  "primed_smite_corpus","primed_smite_corpus","primed_smite_corrupted","primed_smite_corrupted","primed_smite_the_murmur","primed_smite_the_murmur",
-  "primed_fever_strike","primed_fever_strike","primed_reach","primed_reach","primed_heavy_trauma","primed_heavy_trauma","primed_pack_leader","primed_pack_leader",
-  "primed_animal_instinct","primed_animal_instinct","primed_regen","primed_regen","primed_morphic_transformer","primed_morphic_transformer","primed_dual_rounds","primed_dual_rounds",
-  "primed_deadly_efficiency","primed_deadly_efficiency","primed_rubedo_lined_barrel","primed_rubedo_lined_barrel"
+ 
 ];
 
 
