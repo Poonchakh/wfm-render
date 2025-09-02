@@ -29,6 +29,6 @@ async function loadPrices() {
   }
 }
 
-// Загрузка таблицы каждые 5 минут
+// Загрузка таблицы каждые 15 минут
 loadPrices();
-setInterval(loadPrices, 5 * 60 * 1000);
+setInterval(loadPrices, 15 * 60 * 1000);
