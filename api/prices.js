@@ -220,5 +220,5 @@ updateCache().then(() => {
   });
 });
 
-// автообновление каждые 40 минут
-setInterval(updateCache, 40 * 60 * 1000);
+// автообновление каждые 15 минут
+setInterval(updateCache, 15 * 60 * 1000);
