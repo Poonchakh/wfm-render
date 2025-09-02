@@ -4,6 +4,7 @@
   "type": "module",
   "main": "api/prices.js",
   "scripts": {
+    "prestart": "node init_data.js",
     "start": "node api/prices.js"
   },
   "dependencies": {
@@ -11,3 +12,4 @@
     "node-fetch": "^3.3.2"
   }
 }
+
