@@ -1,4 +1,4 @@
-const API_URL = "https://wfm-render.onrender.com/prices"; // ссылка на твой сервер
+const API_URL = "https://wfm-render.onrender.com/prices";
 const tableBody = document.querySelector("#prices-table tbody");
 const lastUpdated = document.getElementById("last-updated");
 const refreshButton = document.getElementById("refresh");
@@ -10,15 +10,15 @@ async function fetchPrices() {
 
     lastUpdated.textContent = "Последнее обновление: " + data.updated;
 
-    tableBody.innerHTML = ""; // очищаем таблицу
+    tableBody.innerHTML = "";
     for (const item in data.prices) {
       const row = document.createElement("tr");
       const nameCell = document.createElement("td");
       nameCell.textContent = item;
       const priceCell = document.createElement("td");
 
-      // Можно показывать минимальную цену среди ордеров
-      const sellOrders = data.prices[item].payload.orders.filter(o => o.order_type === "sell" && o.visible);
+      // Показываем минимальную цену среди ордеров
+      const sellOrders = data.prices[item]?.payload?.orders?.filter(o => o.order_type === "sell" && o.visible) || [];
       const minPrice = sellOrders.length ? Math.min(...sellOrders.map(o => o.platinum)) : "—";
       priceCell.textContent = minPrice;
 
