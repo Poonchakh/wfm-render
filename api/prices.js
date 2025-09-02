@@ -197,10 +197,6 @@ async function updateCache() {
 }
 
 
-
-// ===== Автообновление каждые 15 минут =====
-setInterval(updateCache, 40 * 60 * 1000);
-
 // ===== Эндпоинт /prices =====
 app.get("/prices", (req, res) => {
   if (!lastUpdated) {
@@ -212,11 +208,23 @@ app.get("/prices", (req, res) => {
   });
 });
 
-// ===== Запуск сервера =====
-app.listen(PORT, () => {
-  console.log(`✅ Server running on port ${PORT}`);
-  updateCache(); // загружаем данные сразу при старте
+// чтобы отдавать файлы из /public
+app.use(express.static(path.join(__dirname, "../public")));
+
+// функция для обновления кэша
+async function refreshCache() {
+  const result = await updateCache();
+  cachedPrices = result.prices;
+  lastUpdated = result.updated;
+  console.log("✅ Cache updated at", lastUpdated);
+}
+
+// ⚡ сначала обновляем кэш, потом запускаем сервер
+refreshCache().then(() => {
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+  });
 });
 
-// Чтобы отдавать файлы из /public
-app.use(express.static(path.join(__dirname, "../public")));
+// автообновление каждые 40 минут
+setInterval(refreshCache, 40 * 60 * 1000);
