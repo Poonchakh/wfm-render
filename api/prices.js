@@ -199,7 +199,7 @@ async function updateCache() {
 
 
 // ===== Автообновление каждые 15 минут =====
-setInterval(updateCache, 15 * 60 * 1000);
+setInterval(updateCache, 40 * 60 * 1000);
 
 // ===== Эндпоинт /prices =====
 app.get("/prices", (req, res) => {
