@@ -10,16 +10,16 @@ async function fetchPrices() {
 
     lastUpdated.textContent = "Последнее обновление: " + data.updated;
 
-    tableBody.innerHTML = "";
+    tableBody.innerHTML = ""; // очищаем таблицу
     for (const item in data.prices) {
       const row = document.createElement("tr");
       const nameCell = document.createElement("td");
       nameCell.textContent = item;
       const priceCell = document.createElement("td");
 
-      // Показываем минимальную цену среди ордеров
-      const sellOrders = data.prices[item]?.payload?.orders?.filter(o => o.order_type === "sell" && o.visible) || [];
-      const minPrice = sellOrders.length ? Math.min(...sellOrders.map(o => o.platinum)) : "—";
+      // Теперь data.prices[item] — массив [{price, seller, ...}]
+      const sellOrders = data.prices[item];
+      const minPrice = sellOrders.length ? sellOrders[0].price : "—";
       priceCell.textContent = minPrice;
 
       row.appendChild(nameCell);
@@ -32,11 +32,6 @@ async function fetchPrices() {
   }
 }
 
-// Обновление по кнопке
 refreshButton.addEventListener("click", fetchPrices);
-
-// Автообновление каждые 5 минут
 setInterval(fetchPrices, 40 * 60 * 1000);
-
-// Загружаем данные сразу
 fetchPrices();
