@@ -1,11 +1,13 @@
 import path from "path";
 import { fileURLToPath } from "url";
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
+import fs from "fs";
 import express from "express";
 import fetch from "node-fetch";
 import { updateCache as fetchCache } from "../scripts/fetch_cache.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const DATA_FILE = path.join(__dirname, "../data.json");
 
 const app = express();
 const PORT = process.env.PORT || 10000;
@@ -176,23 +178,35 @@ const ITEMS = [
   "primed_deadly_efficiency","primed_deadly_efficiency","primed_rubedo_lined_barrel","primed_rubedo_lined_barrel"
 ];
 
-// Дедупликация
+
+
+// ====== Удаляем дубликаты ======
+const ITEMS = [ /* ... твой массив ... */ ];
 const UNIQUE_ITEMS = Array.from(new Set(ITEMS));
 
-// ===== Кэш для хранения цен =====
 let cachedPrices = {};
 let lastUpdated = null;
 let cacheUpdating = false;
 
-// ===== Обновление кэша через твой скрипт =====
-async function updateCache() {
-  if (cacheUpdating) return; // Не запускать параллельно
-  cacheUpdating = true;
-  console.log("🔄 Обновляю кэш цен...");
+// Попытка загрузить кэш из файла
+if (fs.existsSync(DATA_FILE)) {
   try {
-    // fetchCache должен возвращать объект вида { [item]: priceData }
+    const fileData = JSON.parse(fs.readFileSync(DATA_FILE, "utf8"));
+    cachedPrices = fileData.prices || {};
+    lastUpdated = fileData.updated || null;
+    console.log("ℹ️ Кэш считан из файла");
+  } catch (err) {
+    console.error("Ошибка при чтении кэша из файла:", err.message);
+  }
+}
+
+async function updateCache() {
+  if (cacheUpdating) return;
+  cacheUpdating = true;
+  try {
     cachedPrices = await fetchCache(UNIQUE_ITEMS);
     lastUpdated = new Date().toISOString();
+    fs.writeFileSync(DATA_FILE, JSON.stringify({ updated: lastUpdated, prices: cachedPrices }, null, 2));
     console.log("✅ Кэш обновлён в", lastUpdated);
   } catch (err) {
     console.error("Ошибка при обновлении кеша:", err.message);
@@ -201,7 +215,6 @@ async function updateCache() {
   }
 }
 
-// ===== Эндпоинт /prices =====
 app.get("/prices", (req, res) => {
   if (!lastUpdated) {
     return res.status(503).json({ error: "Данные ещё не загружены, подожди пару минут" });
@@ -212,15 +225,12 @@ app.get("/prices", (req, res) => {
   });
 });
 
-// чтобы отдавать файлы из /public
 app.use(express.static(path.join(__dirname, "../public")));
 
-// ⚡ сначала обновляем кэш, потом запускаем сервер
 updateCache().then(() => {
   app.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);
   });
 });
 
-// автообновление каждые 40 минут
 setInterval(updateCache, 40 * 60 * 1000);
