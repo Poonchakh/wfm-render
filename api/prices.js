@@ -1,16 +1,16 @@
 import path from "path";
 import { fileURLToPath } from "url";
-import fs from "fs";
 import express from "express";
 import fetch from "node-fetch";
+import fs from "fs";
 import { updateCache as fetchCache } from "../scripts/fetch_cache.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const DATA_FILE = path.join(__dirname, "../data.json");
 
 const app = express();
 const PORT = process.env.PORT || 10000;
+
 
 // ====== Удаляем дубликаты ======
 
@@ -187,7 +187,8 @@ let cachedPrices = {};
 let lastUpdated = null;
 let cacheUpdating = false;
 
-// Попытка загрузить кэш из файла
+// ====== Работа с файловым кешем (опционально) ======
+const DATA_FILE = path.join(__dirname, "../data.json");
 if (fs.existsSync(DATA_FILE)) {
   try {
     const fileData = JSON.parse(fs.readFileSync(DATA_FILE, "utf8"));
@@ -203,8 +204,11 @@ async function updateCache() {
   if (cacheUpdating) return;
   cacheUpdating = true;
   try {
-    cachedPrices = await fetchCache(UNIQUE_ITEMS);
+    // fetchCache теперь принимает только уникальные предметы
+    // fetchCache ДОЛЖЕН возвращать только нужные данные!
+    cachedPrices = await fetchCache(UNIQUE_ITEMS); // например, { item: { price, ... } }
     lastUpdated = new Date().toISOString();
+    // Сохраняем в файл
     fs.writeFileSync(DATA_FILE, JSON.stringify({ updated: lastUpdated, prices: cachedPrices }, null, 2));
     console.log("✅ Кэш обновлён в", lastUpdated);
   } catch (err) {
@@ -226,10 +230,12 @@ app.get("/prices", (req, res) => {
 
 app.use(express.static(path.join(__dirname, "../public")));
 
+// ⚡ сначала обновляем кэш, потом запускаем сервер
 updateCache().then(() => {
   app.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);
   });
 });
 
+// автообновление каждые 40 минут
 setInterval(updateCache, 40 * 60 * 1000);
