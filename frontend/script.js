@@ -1,4 +1,4 @@
-const API_URL = "https://wfm-render.onrender.com/prices";
+const API_URL = "https://wfm-render.onrender.com/prices"; // ссылка на твой сервер
 const tableBody = document.querySelector("#prices-table tbody");
 const lastUpdated = document.getElementById("last-updated");
 const refreshButton = document.getElementById("refresh");
@@ -17,7 +17,7 @@ async function fetchPrices() {
       nameCell.textContent = item;
       const priceCell = document.createElement("td");
 
-      // Теперь data.prices[item] — массив [{price, seller, ...}]
+      // Теперь data.prices[item] — это массив [{price, seller, ...}]
       const sellOrders = data.prices[item];
       const minPrice = sellOrders.length ? sellOrders[0].price : "—";
       priceCell.textContent = minPrice;
