@@ -1,19 +1,16 @@
 import path from "path";
 import { fileURLToPath } from "url";
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 import express from "express";
 import fetch from "node-fetch";
-
-// Импорт функции из скрипта
 import { updateCache as fetchCache } from "../scripts/fetch_cache.js";
 
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// ===== Твой список предметов (сюда вставляешь весь огромный массив) =====
+// ====== Удаляем дубликаты ======
 
 const ITEMS = [
   // ===== Frames =====
@@ -179,23 +176,30 @@ const ITEMS = [
   "primed_deadly_efficiency","primed_deadly_efficiency","primed_rubedo_lined_barrel","primed_rubedo_lined_barrel"
 ];
 
+// Дедупликация
+const UNIQUE_ITEMS = Array.from(new Set(ITEMS));
+
 // ===== Кэш для хранения цен =====
 let cachedPrices = {};
 let lastUpdated = null;
+let cacheUpdating = false;
 
 // ===== Обновление кэша через твой скрипт =====
 async function updateCache() {
+  if (cacheUpdating) return; // Не запускать параллельно
+  cacheUpdating = true;
   console.log("🔄 Обновляю кэш цен...");
   try {
-    // вызываем функцию из fetch_cache.js
-    cachedPrices = await fetchCache(ITEMS);  // fetchCache уже делает задержки между запросами
+    // fetchCache должен возвращать объект вида { [item]: priceData }
+    cachedPrices = await fetchCache(UNIQUE_ITEMS);
     lastUpdated = new Date().toISOString();
     console.log("✅ Кэш обновлён в", lastUpdated);
   } catch (err) {
     console.error("Ошибка при обновлении кеша:", err.message);
+  } finally {
+    cacheUpdating = false;
   }
 }
-
 
 // ===== Эндпоинт /prices =====
 app.get("/prices", (req, res) => {
@@ -211,20 +215,12 @@ app.get("/prices", (req, res) => {
 // чтобы отдавать файлы из /public
 app.use(express.static(path.join(__dirname, "../public")));
 
-// функция для обновления кэша
-async function refreshCache() {
-  const result = await updateCache();
-  cachedPrices = result.prices;
-  lastUpdated = result.updated;
-  console.log("✅ Cache updated at", lastUpdated);
-}
-
 // ⚡ сначала обновляем кэш, потом запускаем сервер
-refreshCache().then(() => {
+updateCache().then(() => {
   app.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);
   });
 });
 
 // автообновление каждые 40 минут
-setInterval(refreshCache, 40 * 60 * 1000);
+setInterval(updateCache, 40 * 60 * 1000);
